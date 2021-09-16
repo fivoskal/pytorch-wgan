@@ -345,7 +345,7 @@ class WGAN_GP(object):
         return x.data.cpu().numpy()
 
     def save_model(self, epoch):
-        cp_path = './checkpoints'
+        cp_path = './checkpoints-wgan-gp'
         if not os.path.isdir(cp_path):
             os.mkdir(cp_path)
         else:
