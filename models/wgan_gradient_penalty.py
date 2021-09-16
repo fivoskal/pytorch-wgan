@@ -10,8 +10,9 @@ import os
 from utils.tensorboard_logger import Logger
 from itertools import chain
 from torchvision import utils
+import os
 
-SAVE_PER_TIMES = 100
+SAVE_PER_TIMES = 1000
 
 class Generator(torch.nn.Module):
     def __init__(self, channels):
@@ -210,7 +211,7 @@ class WGAN_GP(object):
             print(f'Generator iteration: {g_iter}/{self.generator_iters}, g_loss: {g_loss}')
             # Saving model and sampling images every 1000th generator iterations
             if (g_iter) % SAVE_PER_TIMES == 0:
-                self.save_model()
+                self.save_model(g_iter)
                 # # Workaround because graphic card memory can't store more than 830 examples in memory for generating image
                 # # Therefore doing loop and generating 800 examples and stacking into list of samples to get 8000 generated images
                 # # This way Inception score is more correct since there are different generated examples from every class of Inception model
@@ -280,7 +281,7 @@ class WGAN_GP(object):
         #self.file.close()
 
         # Save the trained parameters
-        self.save_model()
+        self.save_model(g_iter)
 
     def evaluate(self, test_loader, D_model_path, G_model_path):
         self.load_model(D_model_path, G_model_path)
@@ -343,10 +344,16 @@ class WGAN_GP(object):
     def to_np(self, x):
         return x.data.cpu().numpy()
 
-    def save_model(self):
-        torch.save(self.G.state_dict(), './generator.pkl')
-        torch.save(self.D.state_dict(), './discriminator.pkl')
-        print('Models save to ./generator.pkl & ./discriminator.pkl ')
+    def save_model(self, epoch):
+        cp_path = './checkpoints'
+        if not os.path.isdir(cp_path):
+            os.mkdir(cp_path)
+        else:
+            pass
+
+        torch.save(self.G.state_dict(), os.path.join(cp_path, 'generator_{}.pkl'.format(epoch)) )
+        torch.save(self.D.state_dict(), os.path.join(cp_path, 'discriminator_{}.pkl'.format(epoch)) )
+        print('Models save to {}/generator_{}.pkl & {}/discriminator_{}.pkl '.format(cp_path, epoch, cp_path, epoch))
 
     def load_model(self, D_model_filename, G_model_filename):
         D_model_path = os.path.join(os.getcwd(), D_model_filename)
